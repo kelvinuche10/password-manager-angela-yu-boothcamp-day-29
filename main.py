@@ -3,6 +3,8 @@ from tkinter import *
 from tkinter import messagebox
 from random import randint, choice, shuffle
 import pyperclip
+import json
+
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 def gen_password():
 	letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
@@ -29,18 +31,44 @@ def add():
 	website = website_entry.get()
 	password = password_entry.get()
 	email = Email_entry.get()
-	if len(website) == 0 or len(password) == 4:
+	new_data = {
+	website : {
+		'email': email,
+		'password': password
+	}
+	}
+	if len(website) == 0 or len(password) == 0:
 		messagebox.askokcancel(message='One or more of the entries was not entered')
 
 	else:
-		is_ok = messagebox.askokcancel(message=f'This are the details you entered\n{website}\n{email}\n{password}\n is it ok to save? ')
+		try:
+			with open('data.json', 'r') as file:
+				data = json.load(file)
+				data.update(new_data)
+		except:
+			with open('data.json', 'w') as file:
+				json.dump(new_data, file, indent=4)
+		else:
+			with open('data.json', 'w') as file:
+				json.dump(data, file, indent=4)
 
-		if is_ok:
-			with open('data.txt', 'a') as file:
-				file.write(f'{website} | {email} | {password}\n')
+		finally:
 			website_entry.delete(0, 'end')
 			password_entry.delete(0, 'end' )
 			messagebox.showinfo(message=f'Your {website} entries saved successfully')
+
+
+def search():
+	website = website_entry.get()
+	with open('data.json', 'r') as file:
+		data = json.load(file)
+		for key, value in data.items():
+			if key.lower() == website.lower():
+				email = value['email']
+				password = value['password']
+				messagebox.showinfo(message=f'Your website details are\nwebsite:  {key}\nEmail: {email}\nPassword: {password}')
+			else:
+				messagebox.showinfo(message='Entry does not exit')
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -59,9 +87,13 @@ canvas.grid(column=1, row=0)
 website_label = Label(text='Website:')
 website_label.grid(column=0, row=1)
 
-website_entry = Entry(width=43)
-website_entry.grid(column=1, columnspan=2, row=1)
+website_entry = Entry(width=21)
+website_entry.grid(column=1,  row=1)
 website_entry.focus()
+
+search_button = Button(text='search', width=21, command=search)
+search_button.grid(column=2, row=1)
+
 
 Email_label = Label(text="Email/Username:")
 Email_label.grid(column=0, row=2)
